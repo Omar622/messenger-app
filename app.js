@@ -10,6 +10,18 @@ const roomRouter = require('./routes/room');
 
 const app = express();
 
+// import dotenv
+require('dotenv').config();
+
+// Set up mongoose connection
+const mongoose = require("mongoose");
+mongoose.set("strictQuery", false);
+
+main().catch((err) => console.log(err));
+async function main() {
+  await mongoose.connect(process.env.DB_CONNECTION_STR);
+}
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
