@@ -1,29 +1,16 @@
+const room_controller = require('../controllers/roomController');
+
 const express = require('express');
 const router = express.Router();
 
-// get all rooms
-router.get('/', function (req, res, next) {
-  res.send('respond with a all rooms');
-});
+router.get('/', room_controller.rooms_list);
 
-// get specific room with an id
-router.get('/:id', function (req, res, next) {
-  res.send('respond with a room ' + req.params.id + ' details');
-});
+router.get('/:id', room_controller.room_detail);
 
-// create room
-router.post('/create', function (req, res, next) {
-  res.send('to implement...');
-});
+router.post('/create', room_controller.room_create_post);
 
-// update specific room with an id
-router.put('/update/:id', function (req, res, next) {
-  res.send('to implement...');
-});
+router.put('/update/:id', room_controller.room_update_post);
 
-// remove specific room with an id
-router.delete('/remove/:id', function (req, res, next) {
-  res.send('to implement...');
-});
+router.delete('/remove/:id', room_controller.room_delete_post);
 
 module.exports = router;

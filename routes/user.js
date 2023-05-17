@@ -1,29 +1,16 @@
+const user_controller = require('../controllers/userController');
+
 const express = require('express');
 const router = express.Router();
 
-// get all users
-router.get('/', function (req, res, next) {
-  res.send('respond with all users');
-});
+router.get('/', user_controller.users_list);
 
-// get specific user with an id
-router.get('/:id', function (req, res, next) {
-  res.send('respond with a user ' + req.params.id + ' details');
-});
+router.get('/:id', user_controller.user_detail);
 
-// create user
-router.post('/create', function (req, res, next) {
-  res.send('to implement...');
-});
+router.post('/create', user_controller.user_create_post);
 
-// update specific user with an id
-router.put('/update/:id', function (req, res, next) {
-  res.send('to implement...');
-});
+router.put('/update/:id', user_controller.user_update_post);
 
-// remove specific user with an id
-router.delete('/remove/:id', function (req, res, next) {
-  res.send('to implement...');
-});
+router.delete('/remove/:id', user_controller.user_delete_post);
 
 module.exports = router;
