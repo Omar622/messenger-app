@@ -43,7 +43,7 @@ exports.user_create_post = [
     if (!errors.isEmpty()) {
       return res.status(400).json({
         new_user: user,
-        errors: errors,
+        errors: errors.array(),
       });
     } else {
       await user.save();
@@ -53,9 +53,52 @@ exports.user_create_post = [
 ];
 
 // update specific user with an id
-exports.user_update_post = asyncHandler(async (req, res, next) => {
-  res.send('to implement...');
-});
+exports.user_update_post = [
+  // Validate and sanitize fields.
+  body('first_name')
+    .trim()
+    .isLength({ min: 1 })
+    .escape()
+    .withMessage('First name must be specified.'),
+  body('family_name')
+    .trim()
+    .isLength({ min: 1 })
+    .escape()
+    .withMessage('Family name must be specified.'),
+  body('date_of_birth', 'Invalid date of birth')
+    .optional({ checkFalsy: true })
+    .isISO8601()
+    .toDate(),
+  // then process request
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    // create user after check
+    const user = new User({
+      _id: req.params.id,
+      first_name: req.body.first_name,
+      family_name: req.body.family_name,
+      date_of_birth: req.body.date_of_birth,
+    });
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        updated_user: user,
+        errors: errors.array(),
+      });
+    } else {
+      const isExist = await User.findById(req.params.id).exec();
+      if (isExist) {
+        await User.findByIdAndUpdate(req.params.id, user, {});
+        return res.json({ message: 'Success' });
+      } else {
+        return res.status(400).json({
+          errors: 'user not exist',
+        });
+      }
+    }
+  }),
+];
 
 // remove specific user with an id
 exports.user_delete_post = asyncHandler(async (req, res, next) => {
