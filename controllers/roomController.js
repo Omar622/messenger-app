@@ -105,5 +105,13 @@ exports.room_update_post = [
 
 // remove specific room with an id
 exports.room_delete_post = asyncHandler(async (req, res, next) => {
-  res.send('to implement...');
+  const room = await Room.findOne({ _id: req.params.id }, 'users creator').exec();
+  const users = room.users;
+  users.push(room.creator);
+
+  const promises = users.map((userId) =>
+    User.updateOne({ _id: userId.toString() }, { $pull: { rooms: req.params.id } }));
+  promises.push(Room.deleteOne({ _id: req.params.id }));
+  await Promise.all(promises);
+  return res.json({ message: 'Success' });
 });
