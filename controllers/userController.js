@@ -4,12 +4,18 @@ const User = require('../models/user');
 
 // get all users
 exports.users_list = asyncHandler(async (req, res, next) => {
-  res.send('respond with all users');
+  const users = await User.find({}).populate('rooms', 'name').exec();
+  res.json({ users: users });
 });
 
 // get specific user with an id
 exports.user_detail = asyncHandler(async (req, res, next) => {
-  res.send('respond with a user ' + req.params.id + ' details');
+  const user = await User.findOne({ _id: req.params.id }).populate('rooms', 'name').exec();
+  if (user) {
+    res.json({ user: user });
+  } else { // not exist
+    res.status(404).json({ errors: 'user not found' });
+  }
 });
 
 // create user

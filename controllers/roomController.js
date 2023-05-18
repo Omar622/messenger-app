@@ -5,12 +5,23 @@ const User = require('../models/user');
 
 // get all rooms
 exports.rooms_list = asyncHandler(async (req, res, next) => {
-  res.send('respond with a all rooms');
+  const rooms = await Room.find({})
+    .populate('creator', 'first_name family_name')
+    .populate('users', 'first_name family_name').exec();
+  res.json({ rooms: rooms });
+
 });
 
 // get specific room with an id
 exports.room_detail = asyncHandler(async (req, res, next) => {
-  res.send('respond with a room ' + req.params.id + ' details');
+  const room = await Room.findOne({ _id: req.params.id })
+    .populate('creator', 'first_name family_name')
+    .populate('users', 'first_name family_name').exec();
+  if (room) {
+    res.json({ room: room });
+  } else { // not exist
+    res.status(404).json({ errors: 'room not found' });
+  }
 });
 
 // create room (need room name and creator id)
