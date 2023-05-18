@@ -52,17 +52,56 @@ exports.room_create_post = [
         errors: errors.array(),
       });
     } else {
-      await room.save();
-      await User.findByIdAndUpdate(req.body.creator, { $push: { rooms: room._id } });
+      await Promise.all([
+        room.save(),
+        User.findByIdAndUpdate(req.body.creator, { $push: { rooms: room._id } }),
+      ]);
       return res.json({ message: 'Success' });
     }
   }),
 ];
 
 // update specific room with an id
-exports.room_update_post = asyncHandler(async (req, res, next) => {
-  res.send('to implement...');
-});
+exports.room_update_post = [
+  // Validate and sanitize fields.
+  body('name')
+    .isLength({ min: 1 })
+    .escape()
+    .withMessage('name must be specified.'),
+  body('creator')
+    .trim()
+    .isLength({ min: 1 })
+    .escape()
+    .withMessage('creator name must be specified.'),
+  // then process request
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        updated_room: new Room({
+          _id: req.params.id,
+          name: req.body.name,
+          creator: req.body.creator,
+        }),
+        errors: errors.array(),
+      });
+    } else {
+      const notUpdatedRoom = await Room.findOne({ _id: req.params.id }, 'creator').exec();
+      await Promise.all([
+        User.updateOne({ _id: req.body.creator }, {
+          $push: { rooms: req.params.id }
+        }),
+        Room.updateOne({ _id: req.params.id }, {
+          $set: { name: req.body.name },
+          $set: { creator: req.body.creator },
+          $push: { users: notUpdatedRoom.creator }
+        }),
+      ])
+      return res.json({ message: 'Success' });
+    }
+  }),
+];
 
 // remove specific room with an id
 exports.room_delete_post = asyncHandler(async (req, res, next) => {
