@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const { body, validationResult } = require('express-validator');
 const Room = require('../models/room');
+const User = require('../models/user');
 
 // get all rooms
 exports.rooms_list = asyncHandler(async (req, res, next) => {
@@ -41,6 +42,7 @@ exports.room_create_post = [
       });
     } else {
       await room.save();
+      await User.findByIdAndUpdate(req.body.creator, { $push: { rooms: room._id } });
       return res.json({ message: 'Success' });
     }
   }),
