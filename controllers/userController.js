@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/user');
+const Room = require('../models/room');
 
 // get all users
 exports.users_list = asyncHandler(async (req, res, next) => {
@@ -108,5 +109,39 @@ exports.user_update_post = [
 
 // remove specific user with an id
 exports.user_delete_post = asyncHandler(async (req, res, next) => {
-  res.send('to implement...');
+  const user = await User.findOne({ _id: req.params.id }).populate('rooms', 'creator users').exec();
+  if (user) {
+    const rooms = user.rooms;
+    const promises = [];
+    rooms.forEach((room) => {
+      if (room.creator.toString() === req.params.id) {
+        if (room.users.length) {
+          // he is the creator and there's users
+          // make room.users[0] is the room creator
+          // remove room.user[0]
+          promises.push(Room.updateOne({ _id: room._id }, {
+            $set: { creator: room.users[0].toString() },
+            $pull: { users: room.users[0].toString() },
+          }));
+        } else {
+          // he is the creator and there's no users
+          // remove room
+          promises.push(Room.deleteOne({ _id: room._id }));
+        }
+      } else {
+        // he is user
+        // remove the user in room.users
+        promises.push(Room.updateOne({ _id: room._id }, {
+          $pull: { users: req.params.id },
+        }));
+      }
+    });
+    // remove the user
+    promises.push(User.deleteOne({ _id: req.params.id }));
+
+    await Promise.all(promises);
+    return res.json({ message: 'Success' });
+  } else {
+    return res.status(404).json({ errors: 'user not exist' });
+  }
 });
